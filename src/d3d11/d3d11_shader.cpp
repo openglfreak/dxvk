@@ -45,6 +45,18 @@ namespace dxvk {
       : module.compile                 (*pDxbcModuleInfo, name);
     m_shader->setShaderKey(*pShaderKey);
     
+    // FIXME this is currently way too slow to be viable
+    // as a default option, but may help Nvidia users.
+    if (env::getEnvVar("DXVK_SHADER_OPTIMIZE") == "1") {
+      if (!m_shader->optimize())
+        Logger::warn(str::format("Failed to optimize: ", name));
+    }
+    
+    if (env::getEnvVar("DXVK_SHADER_VALIDATE") == "1") {
+      if (!m_shader->validate())
+        Logger::warn(str::format("Invalid shader: ", name));
+    }
+    
     if (dumpPath.size() != 0) {
       std::ofstream dumpStream(
         str::tows(str::format(dumpPath, "/", name, ".spv").c_str()).c_str(),

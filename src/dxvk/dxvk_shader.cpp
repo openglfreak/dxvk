@@ -165,6 +165,22 @@ namespace dxvk {
   }
   
   
+  bool DxvkShader::optimize() {
+    SpirvCodeBuffer spirvCode = m_code.decompress();
+    bool ret = spirvCode.optimize();
+    if (ret) {
+      m_code.~SpirvCompressedBuffer();
+      new (&m_code) SpirvCompressedBuffer(spirvCode);
+    }
+    return ret;
+  }
+  
+  
+  bool DxvkShader::validate() const {
+    return m_code.decompress().validate();
+  }
+  
+  
   void DxvkShader::dump(std::ostream& outputStream) const {
     m_code.decompress().store(outputStream);
   }

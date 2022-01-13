@@ -69,6 +69,8 @@ lib_d3d9    = cpp.find_library('d3d9')
 lib_d3d11   = cpp.find_library('d3d11')
 lib_dxgi    = cpp.find_library('dxgi')
 lib_d3dcompiler_43 = cpp.find_library('d3dcompiler_43', dirs : dxvk_library_path)
+lib_spirvtools     = cpp.find_library('libSPIRV-Tools', dirs : dxvk_library_path)
+lib_spirvtools_opt = cpp.find_library('libSPIRV-Tools-opt', dirs : dxvk_library_path)
 
 if dxvk_is_msvc
   lib_d3dcompiler_47 = cpp.find_library('d3dcompiler')
