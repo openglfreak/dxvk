@@ -144,6 +144,10 @@ namespace dxvk {
     const DxvkDescriptorSlotMapping& mapping,
     const DxvkShaderModuleCreateInfo& info) {
     SpirvCodeBuffer spirvCode = m_code.decompress();
+    if (env::getEnvVar("DXVK_SHADER_OPTIMIZE") == "1") {
+      if (!do_optimize(spirvCode))
+        spirvCode = m_code.decompress();
+    }
     uint32_t* code = spirvCode.data();
     
     // Remap resource binding IDs
@@ -166,13 +170,15 @@ namespace dxvk {
   
   
   bool DxvkShader::optimize() {
+    if (env::getEnvVar("DXVK_SHADER_OPTIMIZE") != "1")
+      return true;
     SpirvCodeBuffer spirvCode = m_code.decompress();
-    bool ret = spirvCode.optimize();
-    if (ret) {
-      m_code.~SpirvCompressedBuffer();
-      new (&m_code) SpirvCompressedBuffer(spirvCode);
-    }
-    return ret;
+    return do_optimize(spirvCode);
+  }
+  
+  
+  bool DxvkShader::do_optimize(SpirvCodeBuffer& code) {
+    return code.optimize();
   }
   
   

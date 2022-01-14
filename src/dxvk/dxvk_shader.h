@@ -222,6 +222,8 @@ namespace dxvk {
 
     static void eliminateInput(SpirvCodeBuffer& code, uint32_t location);
 
+    bool do_optimize(SpirvCodeBuffer& code);
+
   };
   
 
