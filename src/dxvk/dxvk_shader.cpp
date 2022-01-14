@@ -176,11 +176,6 @@ namespace dxvk {
   }
   
   
-  bool DxvkShader::validate() const {
-    return m_code.decompress().validate();
-  }
-  
-  
   void DxvkShader::dump(std::ostream& outputStream) const {
     m_code.decompress().store(outputStream);
   }

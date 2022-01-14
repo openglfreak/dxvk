@@ -179,10 +179,4 @@ namespace dxvk {
       &m_code);
   }
   
-  
-  bool SpirvCodeBuffer::validate() const {
-    static const SpirvTools tools(SPV_ENV_VULKAN_1_2);
-    return tools.Validate(m_code);
-  }
-  
 }

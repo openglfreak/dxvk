@@ -52,11 +52,6 @@ namespace dxvk {
         Logger::warn(str::format("Failed to optimize: ", name));
     }
     
-    if (env::getEnvVar("DXVK_SHADER_VALIDATE") == "1") {
-      if (!m_shader->validate())
-        Logger::warn(str::format("Invalid shader: ", name));
-    }
-    
     if (dumpPath.size() != 0) {
       std::ofstream dumpStream(
         str::tows(str::format(dumpPath, "/", name, ".spv").c_str()).c_str(),

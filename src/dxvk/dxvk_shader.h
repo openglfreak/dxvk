@@ -148,12 +148,6 @@ namespace dxvk {
     bool optimize();
     
     /**
-     * \brief Validates SPIR-V shader code
-     * \returns \c true if the code is valid
-     */
-    bool validate() const;
-    
-    /**
      * \brief Dumps SPIR-V shader
      * 
      * Can be used to store the SPIR-V code in a file.
