@@ -63,7 +63,7 @@ namespace dxvk {
   DxvkShader::DxvkShader(
     const DxvkShaderCreateInfo&   info,
           SpirvCodeBuffer&&       spirv)
-  : m_info(info), m_code(spirv) {
+  : m_info(info), m_code(spirv), m_optcodeMutex(), m_optcode() {
     m_info.resourceSlots = nullptr;
     m_info.uniformData = nullptr;
 
@@ -143,10 +143,13 @@ namespace dxvk {
     const Rc<vk::DeviceFn>&          vkd,
     const DxvkDescriptorSlotMapping& mapping,
     const DxvkShaderModuleCreateInfo& info) {
-    SpirvCodeBuffer spirvCode = m_code.decompress();
+    SpirvCodeBuffer spirvCode;
     if (env::getEnvVar("DXVK_SHADER_OPTIMIZE") == "1") {
       if (!do_optimize(spirvCode))
         spirvCode = m_code.decompress();
+    }
+    else {
+      spirvCode = m_code.decompress();
     }
     uint32_t* code = spirvCode.data();
     
@@ -172,13 +175,48 @@ namespace dxvk {
   bool DxvkShader::optimize() {
     if (env::getEnvVar("DXVK_SHADER_OPTIMIZE") != "1")
       return true;
-    SpirvCodeBuffer spirvCode = m_code.decompress();
+    SpirvCodeBuffer spirvCode;
     return do_optimize(spirvCode);
   }
   
   
   bool DxvkShader::do_optimize(SpirvCodeBuffer& code) {
-    return code.optimize();
+    std::unique_lock<sync::Spinlock> optcodeLock(m_optcodeMutex);
+    if (m_optimized) {
+      code = m_optcode.decompress();
+      return true;
+    }
+
+    code = m_code.decompress();
+
+    const std::string optcachePath = env::getEnvVar("DXVK_SHADER_OPTCACHE_PATH");
+    std::wstring filePath;
+    if (optcachePath.size() != 0) {
+      Sha1Hash hash = Sha1Hash::compute(reinterpret_cast<const uint8_t*>(code.data()), code.size());
+      filePath = str::tows(str::format(optcachePath, "/", hash.toString(), ".spv").c_str());
+
+      std::ifstream stream(filePath.c_str(), std::ios_base::binary);
+      if (stream) {
+        code = SpirvCodeBuffer(stream);
+        m_optcode.~SpirvCompressedBuffer();
+        new (&m_optcode) SpirvCompressedBuffer(code);
+        m_optimized = true;
+        return true;
+      }
+    }
+
+    bool ret = code.optimize();
+    if (ret) {
+      m_optcode.~SpirvCompressedBuffer();
+      new (&m_optcode) SpirvCompressedBuffer(code);
+      m_optimized = true;
+
+      if (filePath.size() != 0) {
+        std::ofstream stream(filePath.c_str(), std::ios_base::binary | std::ios_base::trunc);
+        m_optcode.decompress().store(stream);
+      }
+    }
+    return ret;
   }
   
   

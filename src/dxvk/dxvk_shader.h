@@ -212,6 +212,9 @@ namespace dxvk {
     DxvkShaderFlags               m_flags;
     DxvkShaderKey                 m_key;
     size_t                        m_hash = 0;
+    sync::Spinlock                m_optcodeMutex;
+    bool                          m_optimized = false;
+    SpirvCompressedBuffer         m_optcode;
 
     size_t                        m_o1IdxOffset = 0;
     size_t                        m_o1LocOffset = 0;
