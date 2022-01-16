@@ -190,11 +190,12 @@ namespace dxvk {
     code = m_code.decompress();
 
     const std::string optcachePath = env::getEnvVar("DXVK_SHADER_OPTCACHE_PATH");
+    std::string dirPath;
     std::wstring filePath;
     if (optcachePath.size() != 0) {
-      Sha1Hash hash = Sha1Hash::compute(reinterpret_cast<const uint8_t*>(code.data()), code.size());
-      filePath = str::tows(str::format(optcachePath, "/", hash.toString(), ".spv").c_str());
-
+      std::string hash = Sha1Hash::compute(reinterpret_cast<const uint8_t*>(code.data()), code.size()).toString();
+      dirPath = str::format(optcachePath, "/", hash.substr(0, 2));
+      filePath = str::tows(str::format(dirPath, "/", hash.substr(2), ".spv").c_str());
       std::ifstream stream(filePath.c_str(), std::ios_base::binary);
       if (stream) {
         code = SpirvCodeBuffer(stream);
@@ -213,7 +214,10 @@ namespace dxvk {
 
       if (filePath.size() != 0) {
         std::ofstream stream(filePath.c_str(), std::ios_base::binary | std::ios_base::trunc);
-        m_optcode.decompress().store(stream);
+        if (!stream && env::createDirectory(dirPath))
+          stream = std::ofstream(filePath.c_str(), std::ios_base::binary | std::ios_base::trunc);
+        if (stream)
+          m_optcode.decompress().store(stream);
       }
     }
     return ret;
