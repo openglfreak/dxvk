@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include <spirv-tools/libspirv.hpp>
+
 namespace dxvk {
   
   DxvkShaderModule::DxvkShaderModule()
@@ -180,6 +182,15 @@ namespace dxvk {
   }
   
   
+  std::string DxvkShader::getSpirVHash(SpirvCodeBuffer& code) {
+    const uint8_t* spvCode = reinterpret_cast<const uint8_t*>(code.data());
+    const char* spvToolsVersion = spvSoftwareVersionDetailsString();
+    std::vector<uint8_t> hashInput(spvCode, spvCode + code.size());
+    hashInput.insert(hashInput.end(), spvToolsVersion, spvToolsVersion + std::strlen(spvToolsVersion) + 1);
+    return Sha1Hash::compute(hashInput.data(), hashInput.size()).toString();
+  }
+  
+  
   bool DxvkShader::do_optimize(SpirvCodeBuffer& code) {
     std::unique_lock<sync::Spinlock> optcodeLock(m_optcodeMutex);
     if (m_optimized) {
@@ -193,7 +204,7 @@ namespace dxvk {
     std::string dirPath;
     std::wstring filePath;
     if (optcachePath.size() != 0) {
-      std::string hash = Sha1Hash::compute(reinterpret_cast<const uint8_t*>(code.data()), code.size()).toString();
+      std::string hash = getSpirVHash(code);
       dirPath = str::format(optcachePath, "/", hash.substr(0, 2));
       filePath = str::tows(str::format(dirPath, "/", hash.substr(2), ".spv").c_str());
       std::ifstream stream(filePath.c_str(), std::ios_base::binary);

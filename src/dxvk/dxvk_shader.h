@@ -225,6 +225,8 @@ namespace dxvk {
 
     static void eliminateInput(SpirvCodeBuffer& code, uint32_t location);
 
+    std::string getSpirVHash(SpirvCodeBuffer& code);
+
     bool do_optimize(SpirvCodeBuffer& code);
 
   };
