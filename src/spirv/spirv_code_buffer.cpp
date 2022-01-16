@@ -158,20 +158,8 @@ namespace dxvk {
   
   
   bool SpirvCodeBuffer::optimize() {
-    Optimizer optimizer(SPV_ENV_VULKAN_1_0);
-    optimizer.RegisterPass(CreateUnifyConstantPass());
-    optimizer.RegisterPass(CreateInlineExhaustivePass());
-    optimizer.RegisterPass(CreateEliminateDeadFunctionsPass());
-    optimizer.RegisterPass(CreatePrivateToLocalPass());
-    optimizer.RegisterPass(CreateScalarReplacementPass());
-    optimizer.RegisterPass(CreateLocalSingleBlockLoadStoreElimPass());
-    optimizer.RegisterPass(CreateLocalSingleStoreElimPass());
-    optimizer.RegisterPass(CreateLocalMultiStoreElimPass());
-    optimizer.RegisterPass(CreateInsertExtractElimPass());
-    optimizer.RegisterPass(CreateDeadInsertElimPass());
-    optimizer.RegisterPass(CreateStrengthReductionPass());
-    optimizer.RegisterPass(CreateAggressiveDCEPass());
-    optimizer.RegisterPass(CreateCompactIdsPass())
+    Optimizer optimizer(SPV_ENV_VULKAN_1_2);
+    optimizer.RegisterPerformancePasses();
 
     return optimizer.Run(
       m_code.data(),
