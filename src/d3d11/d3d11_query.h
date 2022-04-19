@@ -80,6 +80,10 @@ namespace dxvk {
       m_stallMask |= 1;
       m_stallFlag |= bit::popcnt(m_stallMask) >= 16;
     }
+
+    uint64_t GetCookie() const {
+      return m_cookie;
+    }
     
     D3D10Query* GetD3D10Iface() {
       return &m_d3d10;
@@ -111,10 +115,14 @@ namespace dxvk {
     uint32_t m_stallMask = 0;
     bool     m_stallFlag = false;
 
+    uint64_t m_cookie = 0ull;
+
     std::atomic<uint32_t> m_resetCtr = { 0u };
 
     UINT64 GetTimestampQueryFrequency() const;
     
+    static std::atomic<uint64_t> s_cookie;
+
   };
   
 }

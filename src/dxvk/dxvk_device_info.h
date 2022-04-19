@@ -24,6 +24,7 @@ namespace dxvk {
     VkPhysicalDeviceDepthStencilResolvePropertiesKHR          khrDepthStencilResolve;
     VkPhysicalDeviceDriverPropertiesKHR                       khrDeviceDriverProperties;
     VkPhysicalDeviceFloatControlsPropertiesKHR                khrShaderFloatControls;
+    VkPhysicalDeviceTimelineSemaphorePropertiesKHR            khrTimelineSemaphore;
   };
 
 
@@ -48,6 +49,7 @@ namespace dxvk {
     VkPhysicalDeviceTransformFeedbackFeaturesEXT              extTransformFeedback;
     VkPhysicalDeviceVertexAttributeDivisorFeaturesEXT         extVertexAttributeDivisor;
     VkPhysicalDeviceBufferDeviceAddressFeaturesKHR            khrBufferDeviceAddress;
+    VkPhysicalDeviceTimelineSemaphoreFeaturesKHR              khrTimelineSemaphore;
   };
 
 }

@@ -3,13 +3,16 @@
 
 namespace dxvk {
   
+  std::atomic<uint64_t> D3D11Query::s_cookie = { 0ull };
+
   D3D11Query::D3D11Query(
           D3D11Device*       device,
     const D3D11_QUERY_DESC1& desc)
   : D3D11DeviceChild<ID3D11Query1>(device),
     m_desc(desc),
     m_state(D3D11_VK_QUERY_INITIAL),
-    m_d3d10(this) {
+    m_d3d10(this),
+    m_cookie(++s_cookie) {
     Rc<DxvkDevice> dxvkDevice = m_parent->GetDXVKDevice();
 
     switch (m_desc.Query) {

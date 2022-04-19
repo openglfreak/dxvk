@@ -10,6 +10,13 @@
 namespace dxvk::sync {
 
   /**
+   * \brief Generic pause function
+   */
+  inline void pause() {
+    _mm_pause();
+  }
+
+  /**
    * \brief Generic spin function
    *
    * Blocks calling thread until a condition becomes
@@ -21,7 +28,7 @@ namespace dxvk::sync {
   void spin(uint32_t spinCount, const Fn& fn) {
     while (unlikely(!fn())) {
       for (uint32_t i = 1; i < spinCount; i++) {
-        _mm_pause();
+        pause();
         if (fn())
           return;
       }

@@ -46,6 +46,14 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+function meson_setup {
+    eval "meson setup \"\$@\" $MESON_SETUP_FLAGS"
+}
+
+function meson_compile {
+    eval "meson compile \"\$@\" $MESON_COMPILE_FLAGS"
+}
+
 function build_arch {
   export WINEARCH="win$1"
   export WINEPREFIX="$DXVK_BUILD_DIR/wine.$1"
@@ -57,18 +65,19 @@ function build_arch {
     opt_strip=--strip
   fi
 
-  meson --cross-file "$DXVK_SRC_DIR/$crossfile$1.txt" \
-        --buildtype "release"                         \
-        --prefix "$DXVK_BUILD_DIR"                    \
-        $opt_strip                                    \
-        --bindir "x$1"                                \
-        --libdir "x$1"                                \
-        -Denable_tests=false                          \
-        -Dbuild_id=$opt_buildid                       \
-        "$DXVK_BUILD_DIR/build.$1"
+  meson_setup --cross-file "$DXVK_SRC_DIR/$crossfile$1.txt" \
+              --buildtype "release"                         \
+              --prefix "$DXVK_BUILD_DIR"                    \
+              $opt_strip                                    \
+              --bindir "x$1"                                \
+              --libdir "x$1"                                \
+              -Denable_tests=false                          \
+              -Dbuild_id=$opt_buildid                       \
+              "$DXVK_BUILD_DIR/build.$1"
 
   cd "$DXVK_BUILD_DIR/build.$1"
-  ninja install
+  meson_compile
+  meson install
 
   if [ $opt_devbuild -eq 0 ]; then
     # get rid of some useless .a files

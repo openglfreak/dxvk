@@ -5,6 +5,7 @@
 #include "dxvk_bind_mask.h"
 #include "dxvk_buffer.h"
 #include "dxvk_descriptor.h"
+#include "dxvk_fence.h"
 #include "dxvk_gpu_event.h"
 #include "dxvk_gpu_query.h"
 #include "dxvk_lifetime.h"
@@ -38,13 +39,36 @@ namespace dxvk {
    * only, array sizes are based on need.
    */
   struct DxvkQueueSubmission {
-    uint32_t              waitCount;
-    VkSemaphore           waitSync[2];
-    VkPipelineStageFlags  waitMask[2];
-    uint32_t              wakeCount;
-    VkSemaphore           wakeSync[2];
-    uint32_t              cmdBufferCount;
-    VkCommandBuffer       cmdBuffers[4];
+    std::vector<VkSemaphore>          waitSync;
+    std::vector<VkPipelineStageFlags> waitMask;
+    std::vector<uint64_t>             waitValues;
+    std::vector<VkSemaphore>          signalSync;
+    std::vector<uint64_t>             signalValues;
+    std::vector<VkCommandBuffer>      cmdBuffers;
+
+    void addWaitSemaphore(VkSemaphore semaphore, uint64_t value, VkPipelineStageFlags stageMask) {
+      waitSync.push_back(semaphore);
+      waitMask.push_back(stageMask);
+      waitValues.push_back(value);
+    }
+
+    void addSignalSemaphore(VkSemaphore semaphore, uint64_t value) {
+      signalSync.push_back(semaphore);
+      signalValues.push_back(value);
+    }
+
+    void addCmdBuffer(VkCommandBuffer cmdBuffer) {
+      cmdBuffers.push_back(cmdBuffer);
+    }
+
+    void reset() {
+      waitSync.clear();
+      waitMask.clear();
+      waitValues.clear();
+      signalSync.clear();
+      signalValues.clear();
+      cmdBuffers.clear();
+    }
   };
 
   /**
@@ -199,6 +223,26 @@ namespace dxvk {
     void notifyObjects() {
       m_resources.notify();
       m_signalTracker.notify();
+    }
+
+    /**
+     * \brief Waits for fence
+     *
+     * \param [in] fence Fence to wait on
+     * \param [in] value Value to wait for
+     */
+    void waitFence(Rc<DxvkFence> fence, uint64_t value) {
+      m_waitSemaphores.add(std::move(fence), value);
+    }
+    
+    /**
+     * \brief Signals fence
+     *
+     * \param [in] fence Fence to signal
+     * \param [in] value Value to signal to
+     */
+    void signalFence(Rc<DxvkFence> fence, uint64_t value) {
+      m_signalSemaphores.add(std::move(fence), value);
     }
     
     /**
@@ -765,6 +809,9 @@ namespace dxvk {
     VkCommandBuffer     m_sdmaBuffer = VK_NULL_HANDLE;
 
     VkSemaphore         m_sdmaSemaphore = VK_NULL_HANDLE;
+
+    DxvkFenceList       m_waitSemaphores;
+    DxvkFenceList       m_signalSemaphores;
     
     DxvkCmdBufferFlags  m_cmdBuffersUsed;
     DxvkLifetimeTracker m_resources;
@@ -774,6 +821,7 @@ namespace dxvk {
     DxvkGpuQueryTracker m_gpuQueryTracker;
     DxvkBufferTracker   m_bufferTracker;
     DxvkStatCounters    m_statCounters;
+    DxvkQueueSubmission m_submission;
 
     VkCommandBuffer getCmdBuffer(DxvkCmdBuffer cmdBuffer) const {
       if (cmdBuffer == DxvkCmdBuffer::ExecBuffer) return m_execBuffer;
